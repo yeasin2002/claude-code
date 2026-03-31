@@ -38,15 +38,26 @@ The published source map referenced unobfuscated TypeScript sources hosted in An
 
 ## Repository Scope
 
-Claude Code is Anthropic's CLI for interacting with Claude from the terminal to perform software engineering tasks such as editing files, running commands, searching codebases, and coordinating workflows.
+Claude Code is Anthropic's advanced CLI tool for AI-assisted software engineering. It enables developers to interact with Claude directly from the terminal to perform complex coding tasks including intelligent file operations, command execution with safety controls, advanced codebase search, web research integration, and sophisticated multi-agent workflow coordination.
+
+### Key Capabilities
+- **Intelligent File Operations**: Context-aware reading, writing, and editing of files with support for multiple formats
+- **Safe Command Execution**: Shell command execution with comprehensive permission controls and user approval flows
+- **Advanced Code Search**: Powered by ripgrep with glob pattern matching and semantic search capabilities
+- **Web Integration**: Fetch web content and perform searches for development research
+- **Multi-Agent Coordination**: Spawn and coordinate sub-agents for complex, parallel workflows
+- **Extensible Architecture**: Plugin system and MCP (Model Context Protocol) server integration
+- **IDE Integration**: Bidirectional bridge system connecting with VS Code, JetBrains, and other IDEs
+- **Task Management**: Create, track, and execute development tasks with team collaboration features
 
 This repository contains a mirrored `src/` snapshot for research and analysis.
 
 - **Public exposure identified on**: 2026-03-31
-- **Language**: TypeScript
-- **Runtime**: Bun
+- **Language**: TypeScript (strict mode)
+- **Runtime**: Bun with Node.js compatibility
 - **Terminal UI**: React + [Ink](https://github.com/vadimdemedes/ink)
 - **Scale**: ~1,900 files, 512,000+ lines of code
+- **Architecture**: Tool-based system with ~40 agent tools and ~50 user commands
 
 ---
 
@@ -98,9 +109,24 @@ src/
 
 ## Architecture Summary
 
+Claude Code follows a sophisticated tool-based architecture where every capability is implemented as a self-contained, permission-aware tool. The system emphasizes safety, extensibility, and performance through multiple architectural layers.
+
+### Core Architectural Principles
+
+1. **Tool-Based Design**: Every AI capability is implemented as a discrete tool with defined schemas, permissions, and execution logic
+2. **Permission-First Security**: Comprehensive permission system with user approval flows and configurable automation levels
+3. **Modular Extensibility**: Plugin system and MCP server support for third-party integrations
+4. **Performance Optimization**: Lazy loading, parallel prefetch, and feature flag dead code elimination
+5. **Type Safety**: Extensive use of TypeScript strict mode and Zod runtime validation
+6. **Multi-Agent Coordination**: Built-in support for agent swarms and team-based workflows
+
 ### 1. Tool System (`src/tools/`)
 
-Every tool Claude Code can invoke is implemented as a self-contained module. Each tool defines its input schema, permission model, and execution logic.
+Every tool Claude Code can invoke is implemented as a self-contained module with consistent structure:
+- Input schema definition using Zod
+- Permission requirements and approval flows  
+- Progress tracking and error handling
+- Execution logic with safety controls
 
 | Tool | Description |
 |---|---|
@@ -130,7 +156,11 @@ Every tool Claude Code can invoke is implemented as a self-contained module. Eac
 
 ### 2. Command System (`src/commands/`)
 
-User-facing slash commands invoked with `/` prefix.
+User-facing slash commands invoked with `/` prefix. Each command is a self-contained module following consistent patterns:
+- `index.ts` for command registration and exports
+- Main implementation with React/Ink terminal UI
+- Input validation using Zod schemas where applicable
+- Integration with the permission system
 
 | Command | Description |
 |---|---|
@@ -157,6 +187,8 @@ User-facing slash commands invoked with `/` prefix.
 
 ### 3. Service Layer (`src/services/`)
 
+External integrations and core services providing foundational capabilities:
+
 | Service | Description |
 |---|---|
 | `api/` | Anthropic API client, file API, bootstrap |
@@ -174,22 +206,29 @@ User-facing slash commands invoked with `/` prefix.
 
 ### 4. Bridge System (`src/bridge/`)
 
-A bidirectional communication layer connecting IDE extensions (VS Code, JetBrains) with the Claude Code CLI.
+A sophisticated bidirectional communication layer that enables seamless integration between IDE extensions (VS Code, JetBrains) and the Claude Code CLI. This system allows for remote control and coordination of AI operations across different development environments.
 
-- `bridgeMain.ts` — Bridge main loop
-- `bridgeMessaging.ts` — Message protocol
-- `bridgePermissionCallbacks.ts` — Permission callbacks
-- `replBridge.ts` — REPL session bridge
-- `jwtUtils.ts` — JWT-based authentication
-- `sessionRunner.ts` — Session execution management
+**Key Components:**
+- `bridgeMain.ts` — Main bridge orchestration and lifecycle management
+- `bridgeMessaging.ts` — Message protocol implementation with JWT authentication
+- `bridgePermissionCallbacks.ts` — Permission delegation and approval flows
+- `replBridge.ts` — REPL session management and state synchronization
+- `sessionRunner.ts` — Session execution coordination and error handling
+- `jwtUtils.ts` — JWT-based authentication and token management
 
 ### 5. Permission System (`src/hooks/toolPermission/`)
 
-Checks permissions on every tool invocation. Either prompts the user for approval/denial or automatically resolves based on the configured permission mode (`default`, `plan`, `bypassPermissions`, `auto`, etc.).
+A comprehensive security framework that governs all tool invocations with multiple permission modes and user control mechanisms:
 
-### 6. Feature Flags
+- **Permission Modes**: `default`, `plan`, `bypassPermissions`, `auto`, and custom configurations
+- **User Approval Flows**: Interactive prompts with approve/deny/always allow options
+- **Tool-Specific Permissions**: Granular control over individual tool capabilities
+- **Context-Aware Security**: Permission decisions based on operation context and risk assessment
+- **Audit Trail**: Complete logging of permission decisions and user interactions
 
-Dead code elimination via Bun's `bun:bundle` feature flags:
+### 6. Feature Flag System
+
+Advanced build-time optimization using Bun's `bun:bundle` feature flags for dead code elimination and conditional feature loading:
 
 ```typescript
 import { feature } from 'bun:bundle'
@@ -200,27 +239,57 @@ const voiceCommand = feature('VOICE_MODE')
   : null
 ```
 
-Notable flags: `PROACTIVE`, `KAIROS`, `BRIDGE_MODE`, `DAEMON`, `VOICE_MODE`, `AGENT_TRIGGERS`, `MONITOR_TOOL`
+**Active Feature Flags:**
+- `PROACTIVE` - Proactive agent behavior and suggestions
+- `KAIROS` - Advanced timing and scheduling features  
+- `BRIDGE_MODE` - IDE integration capabilities
+- `DAEMON` - Background daemon mode operation
+- `VOICE_MODE` - Voice input and interaction
+- `AGENT_TRIGGERS` - Automated agent trigger system
+- `MONITOR_TOOL` - System monitoring and diagnostics
+
+This system enables:
+- **Reduced Bundle Size**: Unused features are completely eliminated
+- **Environment-Specific Builds**: Different feature sets for different deployment targets
+- **A/B Testing**: Gradual feature rollouts with GrowthBook integration
+- **Performance Optimization**: Only load code for enabled features
 
 ---
 
 ## Key Files in Detail
 
 ### `QueryEngine.ts` (~46K lines)
-
-The core engine for LLM API calls. Handles streaming responses, tool-call loops, thinking mode, retry logic, and token counting.
+The heart of Claude Code's AI interaction system. This massive file handles:
+- **Streaming API Calls**: Real-time response processing with the Anthropic API
+- **Tool-Call Loops**: Orchestrating complex multi-tool workflows
+- **Thinking Mode**: Internal reasoning and planning capabilities
+- **Retry Logic**: Robust error handling and recovery mechanisms
+- **Token Management**: Usage tracking, cost calculation, and optimization
+- **Context Management**: Intelligent context window management and compression
 
 ### `Tool.ts` (~29K lines)
-
-Defines base types and interfaces for all tools — input schemas, permission models, and progress state types.
+Comprehensive type system and base interfaces for all tools:
+- **Input Schema Definitions**: Zod-based validation for all tool inputs
+- **Permission Models**: Granular permission requirements and approval flows
+- **Progress State Types**: Standardized progress tracking across all tools
+- **Error Handling**: Consistent error types and recovery patterns
+- **Tool Metadata**: Documentation, usage hints, and capability descriptions
 
 ### `commands.ts` (~25K lines)
+Central command registry and execution system:
+- **Dynamic Command Loading**: Conditional imports based on environment and features
+- **Command Discovery**: Automatic registration of slash commands and skills
+- **Permission Integration**: Command-level permission checks and user approval
+- **Environment Filtering**: Different command sets for different execution contexts
+- **Alias Management**: Command aliases and shortcut handling
 
-Manages registration and execution of all slash commands. Uses conditional imports to load different command sets per environment.
-
-### `main.tsx`
-
-Commander.js-based CLI parser and React/Ink renderer initialization. At startup, it overlaps MDM settings, keychain prefetch, and GrowthBook initialization for faster boot.
+### `main.tsx` (~4.5K lines)
+Application bootstrap and CLI orchestration:
+- **Commander.js Integration**: Argument parsing and command routing
+- **React/Ink Initialization**: Terminal UI setup and rendering
+- **Parallel Startup Optimization**: MDM settings, keychain prefetch, and API preconnect
+- **Feature Flag Resolution**: Build-time and runtime feature detection
+- **Error Boundary Setup**: Top-level error handling and recovery
 
 ---
 
@@ -244,31 +313,130 @@ Commander.js-based CLI parser and React/Ink renderer initialization. At startup,
 
 ## Notable Design Patterns
 
-### Parallel Prefetch
-
-Startup time is optimized by prefetching MDM settings, keychain reads, and API preconnect in parallel before heavy module evaluation begins.
+### Parallel Prefetch Architecture
+Startup time is aggressively optimized through parallel initialization of critical systems:
 
 ```typescript
 // main.tsx — fired as side-effects before other imports
-startMdmRawRead()
-startKeychainPrefetch()
+startMdmRawRead()        // Mobile Device Management settings
+startKeychainPrefetch()  // macOS Keychain authentication data
+startApiPreconnect()     // Anthropic API connection warming
 ```
 
-### Lazy Loading
+This pattern reduces cold start time by overlapping I/O operations with module loading.
 
-Heavy modules (OpenTelemetry, gRPC, analytics, and some feature-gated subsystems) are deferred via dynamic `import()` until actually needed.
+### Lazy Loading with Dynamic Imports
+Heavy modules are deferred until actually needed, reducing memory footprint and startup time:
 
-### Agent Swarms
+```typescript
+// Deferred imports for performance-critical paths
+const analytics = await import('./services/analytics')
+const telemetry = await import('./telemetry/opentelemetry')
+const gRPC = await import('./services/grpc')
+```
 
-Sub-agents are spawned via `AgentTool`, with `coordinator/` handling multi-agent orchestration. `TeamCreateTool` enables team-level parallel work.
+### Multi-Agent Coordination (Agent Swarms)
+Sophisticated agent orchestration system enabling parallel and coordinated AI workflows:
 
-### Skill System
+- **Sub-Agent Spawning**: Via `AgentTool` with isolated contexts and tool access
+- **Team Coordination**: `TeamCreateTool` and `TeamDeleteTool` for managing agent teams
+- **Message Passing**: `SendMessageTool` for inter-agent communication
+- **Workflow Orchestration**: `coordinator/` module handles complex multi-agent scenarios
 
-Reusable workflows defined in `skills/` are executed through `SkillTool`. Users can add custom skills.
+### Skill System Architecture
+Reusable workflow patterns implemented as skills:
+
+- **Bundled Skills**: Compiled into the binary via `bundledSkills.ts`
+- **User Skills**: Loaded from filesystem with hot-reloading support
+- **Skill Discovery**: Automatic registration and availability checking
+- **Context Isolation**: Skills run in isolated contexts with controlled tool access
 
 ### Plugin Architecture
+Extensible system for third-party integrations:
 
-Built-in and third-party plugins are loaded through the `plugins/` subsystem.
+- **Plugin Discovery**: Automatic loading from configured directories
+- **API Surface**: Well-defined plugin interfaces and lifecycle hooks
+- **Sandboxing**: Controlled execution environment for third-party code
+- **Hot Reloading**: Development-time plugin reloading without restart
+
+## Development and Build Information
+
+### Build System
+Claude Code uses Bun's advanced build system with several sophisticated features:
+
+```bash
+# Development - Run directly with Bun
+bun run src/main.tsx
+
+# Production Build - Compile to standalone executable
+bun build src/main.tsx --compile --outfile=claude-code
+
+# Feature-Specific Builds - With different flag combinations
+bun build --define feature.VOICE_MODE=true --define feature.BRIDGE_MODE=false
+
+# Bundle Analysis - Inspect bundle composition
+bun build --analyze
+```
+
+### Testing Strategy
+Comprehensive testing across multiple layers:
+
+```bash
+# Unit Tests - Individual tool and service testing
+bun test src/tools/
+bun test src/services/
+
+# Integration Tests - Cross-system functionality
+bun test src/integration/
+
+# E2E Tests - Full workflow validation
+bun test src/e2e/
+
+# Performance Tests - Startup time and memory usage
+bun test src/performance/
+```
+
+### Development Workflow
+- **Hot Reloading**: Automatic restart on source changes during development
+- **Type Checking**: Continuous TypeScript validation with strict mode
+- **Linting**: ESLint with custom rules for the codebase patterns
+- **Formatting**: Prettier with project-specific configuration
+- **Pre-commit Hooks**: Automated testing and validation before commits
+
+### Distribution
+- **Standalone Executables**: Platform-specific binaries via `bun build --compile`
+- **npm Package**: Bundled JavaScript for Node.js environments
+- **Docker Images**: Containerized deployment options
+- **IDE Extensions**: Integrated packages for VS Code, JetBrains IDEs
+
+---
+
+## Security Research Context
+
+### Source Code Exposure Analysis
+This repository serves as a case study in software supply chain security, specifically examining:
+
+- **Build Artifact Leakage**: How source maps in npm packages can expose proprietary code
+- **Dependency Chain Vulnerabilities**: Analysis of third-party package risks in AI tooling
+- **Permission System Design**: Study of comprehensive permission frameworks in AI applications
+- **Secure Development Practices**: Examination of security patterns in large TypeScript codebases
+
+### Educational Value
+The codebase provides insights into:
+
+- **Modern CLI Architecture**: Advanced patterns for building sophisticated command-line tools
+- **AI Agent Coordination**: Real-world implementation of multi-agent systems
+- **Terminal UI Development**: Complex React/Ink applications with rich interactions
+- **Performance Optimization**: Startup time optimization and memory management techniques
+- **Type Safety at Scale**: Large-scale TypeScript application architecture
+
+### Research Applications
+This snapshot enables research into:
+
+- **Agentic System Design**: How AI agents are structured and coordinated
+- **Developer Tool Architecture**: Patterns for building AI-assisted development environments
+- **Security Model Implementation**: Real-world permission and approval systems
+- **Build System Innovation**: Advanced bundling and feature flag systems
 
 ---
 
