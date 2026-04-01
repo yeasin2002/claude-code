@@ -1,0 +1,88 @@
+# prod
+dist/
+/build
+/out/
+
+# dev
+.yarn/
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+.vscode/*
+!.vscode/launch.json
+!.vscode/*.code-snippets
+.idea/workspace.xml
+.idea/usage.statistics.xml
+.idea/shelf
+.wrangler
+.alchemy
+/.next/
+.vercel
+prisma/generated/
+
+
+# deps
+node_modules/
+/node_modules
+/.pnp
+.pnp.*
+
+# env
+.env*
+.env.production
+!.env.example
+!.env.docker
+.dev.vars
+
+# logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# misc
+.DS_Store
+*.pem
+
+# local db
+*.db*
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+
+
+# -------------
+node_modules
+.turbo
+.alchemy
+.env
+
+# START Ruler Generated Files
+/.windsurf/mcp_config.json
+/.windsurf/mcp_config.json.bak
+/.windsurf/rules/ruler_windsurf_instructions_00.md
+/.windsurf/rules/ruler_windsurf_instructions_00.md.bak
+/.windsurf/rules/ruler_windsurf_instructions_01.md
+/.windsurf/rules/ruler_windsurf_instructions_01.md.bak
+/.windsurf/rules/ruler_windsurf_instructions_02.md
+/.windsurf/rules/ruler_windsurf_instructions_02.md.bak
+/.windsurf/rules/ruler_windsurf_instructions_03.md
+/.windsurf/rules/ruler_windsurf_instructions_03.md.bak
+# END Ruler Generated Files
+
+# Docker
+uploads/
+!uploads/.gitkeep
+firebase-service-account.json
+ssl/
+
+# Beszel Monitoring
+beszel_data/
+beszel_agent_data/
+beszel_socket/
