@@ -20,6 +20,8 @@
 | 08 | [UI Architecture](./08-ui-architecture.md) | React/Ink terminal UI system | Intermediate |
 | 09 | [Multi-Agent System](./09-multi-agent-system.md) | Parallel AI coordination | Advanced |
 | 10 | [MVP Building Guide](./10-mvp-building-guide.md) | Build your own from scratch | Advanced |
+| 11 | [Package Ecosystem Comparison](./11-package-ecosystem-comparison.md) | Terminal AI Agent Packages | Intermediate |
+| 12 | [TanStack AI vs Vercel AI](./12.tanstack_ai-vs-vercel-ai.md) | AI SDK Comparison | Intermediate |
 
 ---
 
